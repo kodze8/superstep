@@ -8,13 +8,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CyclicBarrier;
 
 public class Master{
     static int numberOfWorkers = 5;
     Graph graph;
     List<Worker> workers;
 
-    boolean halted = false;
+    boolean isHalted = false;
 
 
     public Master(int n, List<List<Integer>> edgeList){
@@ -22,7 +23,6 @@ public class Master{
         this.graph = new Graph(n, edgeList, false);
         this.createWorkers();
         this.partition();
-
     }
 
     public void createWorkers(){
@@ -64,7 +64,7 @@ public class Master{
         }
     }
 
-    public void waitUntilAllWorkerStateIs(WorkerState state){
+    public void waitForAllWorkers(WorkerState state){
         int finished = 0;
         while (finished != this.workers.size()){
             finished = 0;
@@ -75,60 +75,50 @@ public class Master{
         }
     }
 
-
-
-    public void runBFS(int srcVertex){
-        this.startBFS(srcVertex);
-        int superStep = 1;
-        while (!this.halted){
-            System.out.println("\n========== SuperStep " + superStep + " ==========");
-
-            for (Worker worker: this.workers){
-                worker.setNextToCurrent();
-                worker.acceptControlMessage(WorkerState.STARTED);
-            }
-
-            this.waitUntilAllWorkerStateIs(WorkerState.STARTED);
-            System.out.println("-> All workers STARTED");
-
-            for (Worker worker: this.workers){
-                worker.acceptControlMessage(WorkerState.PROCESSING);
-            }
-
-            this.waitUntilAllWorkerStateIs(WorkerState.FINISHED);
-            System.out.println("-> All workers FINISHED");
-
-            boolean noUpdatesToProcess = true;
-            for (Worker from: this.workers){
-
-                for (Message msg: from.getMessageForNeighbors()){
-
-                    System.out.println("  Worker-" + from.getWorkerId() + " sends msg: " + msg);
-
-                    for (Worker to: this.workers){
-                        if (to.containsVertex(msg.getAddress())) {
-                            to.addToNextQueue(msg);
-                            noUpdatesToProcess = false;
-                            break;
-                        }
-                    }
-                }
-            }
-            System.out.println(noUpdatesToProcess ? "-> No new messages, halting." : "-> Messages exist, continuing.");
-            this.halted = noUpdatesToProcess;
-
-            superStep++;
+    public void setState(ControlSignal signal, WorkerState state){
+        for (Worker worker: this.workers){
+            worker.acceptControlMessage(signal);
         }
+        this.waitForAllWorkers(state);
+    }
 
+    public void printResults(int srcVertex){
         System.out.println("\nFinal distances from source " + srcVertex + ":");
         this.graph.getVertexValueSet().stream()
                 .sorted(Comparator.comparingInt(v -> v.getId().getIntValue()))
                 .forEach(v -> System.out.println("Vertex "
                         + v.getId().getIntValue()
                         + " -> distance " + (v.getDistance()!=Integer.MAX_VALUE ? v.getDistance():"INFINITY")));
+    }
 
-        for (Worker w: this.workers)
-            w.shutDown();
+
+
+    public void runBFS(int srcVertex){
+        this.startBFS(srcVertex);
+        int superStep = 1;
+        Router router = new Router(this.workers);
+
+        while (!this.isHalted){
+            System.out.println("\n========== SuperStep " + superStep + " ==========");
+
+            for (Worker worker: this.workers){
+                worker.swapMessageQueues();
+            }
+
+            this.setState(ControlSignal.START_STEP, WorkerState.READY);
+            System.out.println("-> All workers STARTED");
+
+            this.setState(ControlSignal.PROCESS_MESSAGES, WorkerState.FINISHED);
+            System.out.println("-> All workers FINISHED");
+
+
+            boolean hasMessages = router.routeAll();
+            this.isHalted = !hasMessages;
+
+            superStep++;
+        }
+        this.printResults(srcVertex);
+        this.setState(ControlSignal.SHUTDOWN, WorkerState.SHUTDOWN);
     }
 
 

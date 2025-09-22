@@ -14,7 +14,7 @@ public class Worker extends Thread implements MessageEmitter {
     private final HashMap<VertexID, Vertex> vertices;
     private Queue<Message> currentQueue;
     private volatile Queue<Message> nextQueue;
-    private  volatile Queue<WorkerState> controlSignals;
+    private  volatile Queue<ControlSignal> controlSignals;
     private  volatile WorkerState stateSignal;
     private volatile Queue<Message> msgForNeighbors;
     private volatile Boolean running;
@@ -28,7 +28,7 @@ public class Worker extends Thread implements MessageEmitter {
         this.currentQueue = new LinkedList<>();
         this.nextQueue = new LinkedList<>();
         this.msgForNeighbors = new LinkedList<>();
-        this.stateSignal = WorkerState.STARTED;
+        this.stateSignal = WorkerState.READY;
         this.id = temp;
     }
 
@@ -54,10 +54,10 @@ public class Worker extends Thread implements MessageEmitter {
     }
 
     /**Master Control Queue Functionalities*/
-    public synchronized void acceptControlMessage(WorkerState state) {
-        this.controlSignals.add(state);
+    public synchronized void acceptControlMessage(ControlSignal signal) {
+        this.controlSignals.add(signal);
     }
-    private synchronized WorkerState getControlMessage() {
+    private synchronized ControlSignal getControlMessage() {
         return this.controlSignals.poll();
     }
     private synchronized boolean controlQueueIsEmpty() {
@@ -76,7 +76,7 @@ public class Worker extends Thread implements MessageEmitter {
     public synchronized void addToNextQueue(Message message) {
         this.nextQueue.add(message);
     }
-    public synchronized void setNextToCurrent(){
+    public synchronized void swapMessageQueues(){
         this.currentQueue = new LinkedList<>(this.nextQueue);
         this.nextQueue=  new LinkedList<>();
         this.msgForNeighbors = new LinkedList<>();
@@ -94,18 +94,21 @@ public class Worker extends Thread implements MessageEmitter {
     public void run() {
         while (this.running) {
             if (!this.controlQueueIsEmpty()){
-                WorkerState state = this.getControlMessage();
-
-                if (state==WorkerState.STARTED){
-                    this.setWorkerState(WorkerState.STARTED);
-
-                } else if (state==WorkerState.PROCESSING) {
-                    while (!this.currentQueue.isEmpty()){
-                        Message msg = this.currentQueue.poll();
-                        System.out.println("  Worker-"+this.id+" processes msg: "+msg);
-                        this.processMsg(msg);
+                ControlSignal signal = this.getControlMessage();
+                switch (signal) {
+                    case START_STEP -> this.setWorkerState(WorkerState.READY);
+                    case PROCESS_MESSAGES -> {
+                        while (!this.currentQueue.isEmpty()) {
+                            Message msg = this.currentQueue.poll();
+                            System.out.println("  Worker-" + this.id + " processes msg: " + msg);
+                            this.processMsg(msg);
+                        }
+                        this.setWorkerState(WorkerState.FINISHED);
                     }
-                    this.setWorkerState(WorkerState.FINISHED);
+                    case SHUTDOWN -> {
+                        this.shutDown();
+                        this.setWorkerState(WorkerState.SHUTDOWN);
+                    }
                 }
             }
         }
