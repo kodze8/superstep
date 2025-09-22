@@ -100,11 +100,10 @@ public class Master{
 
             boolean noUpdatesToProcess = true;
             for (Worker from: this.workers){
+
                 for (Message msg: from.getMessageForNeighbors()){
 
-                    System.out.println("  Worker-" + from.getWorkerId() + " sends "
-                            + msg.getAddress().getIntValue()
-                            + " distance " + msg.getDistance());
+                    System.out.println("  Worker-" + from.getWorkerId() + " sends msg: " + msg);
 
                     for (Worker to: this.workers){
                         if (to.containsVertex(msg.getAddress())) {

@@ -20,6 +20,6 @@ public class Message {
 
     @Override
     public String toString() {
-        return this.address.getIntValue() + " has distance " + this.distance;
+        return "Vertex-"+this.address.getIntValue() + " has distance " + this.distance;
     }
 }

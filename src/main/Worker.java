@@ -11,18 +11,13 @@ import java.util.*;
 
 public class Worker extends Thread implements MessageEmitter {
     private final int id;
-
     private final HashMap<VertexID, Vertex> vertices;
-
     private Queue<Message> currentQueue;
     private volatile Queue<Message> nextQueue;
     private  volatile Queue<String> controlSignals;
     private  volatile WorkerState stateSignal;
-
     private volatile Queue<Message> msgForNeighbors;
     private volatile Boolean running;
-
-
 
 
 
@@ -35,8 +30,8 @@ public class Worker extends Thread implements MessageEmitter {
         this.msgForNeighbors = new LinkedList<>();
         this.stateSignal = WorkerState.STARTED;
         this.id = temp;
-
     }
+
     public void assignVertex(Vertex vertex){
         this.vertices.put(vertex.getId(), vertex);
 
@@ -46,40 +41,45 @@ public class Worker extends Thread implements MessageEmitter {
         return this.vertices.containsKey(id);
     }
 
+    public int getWorkerId(){
+        return this.id;
+    }
+
+    public void shutDown(){
+        this.running = false;
+    }
+
+    public synchronized Queue<Message> getMessageForNeighbors(){
+        return this.msgForNeighbors;
+    }
+
+    /**Master Control Queue Functionalities*/
     public synchronized void acceptControlMessage(String message) {
         this.controlSignals.add(message);
     }
     private synchronized String getControlMessage() {
         return this.controlSignals.poll();
     }
-
     private synchronized boolean controlQueueIsEmpty() {
         return this.controlSignals.isEmpty();
     }
 
-    public synchronized void addToNextQueue(Message message) {
-        this.nextQueue.add(message);
-    }
-
+    /**Worker State*/
     public synchronized WorkerState getWorkerState(){
         return this.stateSignal;
     }
     private synchronized void setWorkerState(WorkerState state){
-         this.stateSignal = state;
+        this.stateSignal = state;
     }
 
-
-
-
-    public int getWorkerId(){
-        return this.id;
+    /**Next & Current Queue Functionalities*/
+    public synchronized void addToNextQueue(Message message) {
+        this.nextQueue.add(message);
     }
-
     public synchronized void setNextToCurrent(){
         this.currentQueue = new LinkedList<>(this.nextQueue);
         this.nextQueue=  new LinkedList<>();
         this.msgForNeighbors = new LinkedList<>();
-        //System.out.println("for worker "+this.id+" current queue looks like: "+this.currentQueue);
     }
 
     public void processMsg(Message msg){
@@ -98,9 +98,11 @@ public class Worker extends Thread implements MessageEmitter {
 
                 if (temp.equals("START")){
                     this.setWorkerState(WorkerState.STARTED);
+
                 } else if (temp.equals("PROCESS")) {
                     while (!this.currentQueue.isEmpty()){
                         Message msg = this.currentQueue.poll();
+                        System.out.println("  Worker-"+this.id+" processes msg: "+msg);
                         this.processMsg(msg);
                     }
                     this.setWorkerState(WorkerState.FINISHED);
@@ -109,9 +111,7 @@ public class Worker extends Thread implements MessageEmitter {
         }
     }
 
-    public synchronized Queue<Message> getMessageForNeighbors(){
-        return this.msgForNeighbors;
-    }
+
 
     @Override
     public synchronized void emit(Message m) {
@@ -120,8 +120,5 @@ public class Worker extends Thread implements MessageEmitter {
         }
     }
 
-    public void shutDown(){
-        this.running = false;
 
-    }
 }
