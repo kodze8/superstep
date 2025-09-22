@@ -1,5 +1,5 @@
 package main;
 
 public enum WorkerState {
-    STARTED, FINISHED
+    STARTED, FINISHED, PROCESSING
 }

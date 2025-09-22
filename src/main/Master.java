@@ -85,14 +85,14 @@ public class Master{
 
             for (Worker worker: this.workers){
                 worker.setNextToCurrent();
-                worker.acceptControlMessage("START");
+                worker.acceptControlMessage(WorkerState.STARTED);
             }
 
             this.waitUntilAllWorkerStateIs(WorkerState.STARTED);
             System.out.println("-> All workers STARTED");
 
             for (Worker worker: this.workers){
-                worker.acceptControlMessage("PROCESS");
+                worker.acceptControlMessage(WorkerState.PROCESSING);
             }
 
             this.waitUntilAllWorkerStateIs(WorkerState.FINISHED);

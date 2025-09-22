@@ -14,7 +14,7 @@ public class Worker extends Thread implements MessageEmitter {
     private final HashMap<VertexID, Vertex> vertices;
     private Queue<Message> currentQueue;
     private volatile Queue<Message> nextQueue;
-    private  volatile Queue<String> controlSignals;
+    private  volatile Queue<WorkerState> controlSignals;
     private  volatile WorkerState stateSignal;
     private volatile Queue<Message> msgForNeighbors;
     private volatile Boolean running;
@@ -54,10 +54,10 @@ public class Worker extends Thread implements MessageEmitter {
     }
 
     /**Master Control Queue Functionalities*/
-    public synchronized void acceptControlMessage(String message) {
-        this.controlSignals.add(message);
+    public synchronized void acceptControlMessage(WorkerState state) {
+        this.controlSignals.add(state);
     }
-    private synchronized String getControlMessage() {
+    private synchronized WorkerState getControlMessage() {
         return this.controlSignals.poll();
     }
     private synchronized boolean controlQueueIsEmpty() {
@@ -94,12 +94,12 @@ public class Worker extends Thread implements MessageEmitter {
     public void run() {
         while (this.running) {
             if (!this.controlQueueIsEmpty()){
-                String temp = this.getControlMessage();
+                WorkerState state = this.getControlMessage();
 
-                if (temp.equals("START")){
+                if (state==WorkerState.STARTED){
                     this.setWorkerState(WorkerState.STARTED);
 
-                } else if (temp.equals("PROCESS")) {
+                } else if (state==WorkerState.PROCESSING) {
                     while (!this.currentQueue.isEmpty()){
                         Message msg = this.currentQueue.poll();
                         System.out.println("  Worker-"+this.id+" processes msg: "+msg);
