@@ -6,7 +6,7 @@ import graph.Vertex;
 import graph.VertexID;
 
 import java.util.*;
-
+import java.util.concurrent.CountDownLatch;
 
 
 public class Worker extends Thread implements MessageEmitter {
@@ -18,6 +18,7 @@ public class Worker extends Thread implements MessageEmitter {
     private  volatile WorkerState stateSignal;
     private volatile Queue<Message> msgForNeighbors;
     private volatile Boolean running;
+    private CountDownLatch currentLatch;
 
 
 
@@ -54,8 +55,9 @@ public class Worker extends Thread implements MessageEmitter {
     }
 
     /**Master Control Queue Functionalities*/
-    public synchronized void acceptControlMessage(ControlSignal signal) {
+    public synchronized void acceptControlMessage(ControlSignal signal, CountDownLatch latch) {
         this.controlSignals.add(signal);
+        this.currentLatch = latch;
     }
     private synchronized ControlSignal getControlMessage() {
         return this.controlSignals.poll();
@@ -70,6 +72,7 @@ public class Worker extends Thread implements MessageEmitter {
     }
     private synchronized void setWorkerState(WorkerState state){
         this.stateSignal = state;
+        if (currentLatch != null) currentLatch.countDown();
     }
 
     /**Next & Current Queue Functionalities*/

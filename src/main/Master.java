@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
 public class Master{
     static int numberOfWorkers = 5;
     Graph graph;
     List<Worker> workers;
-
     boolean isHalted = false;
 
 
@@ -64,22 +64,16 @@ public class Master{
         }
     }
 
-    public void waitForAllWorkers(WorkerState state){
-        int finished = 0;
-        while (finished != this.workers.size()){
-            finished = 0;
-            for (Worker w: this.workers){
-                if (w.getWorkerState() == state)
-                    finished++;
-            }
+    public void setState(ControlSignal signal, WorkerState state) {
+        CountDownLatch latch = new CountDownLatch(workers.size());
+        for (Worker worker : workers) {
+            worker.acceptControlMessage(signal, latch);
         }
-    }
-
-    public void setState(ControlSignal signal, WorkerState state){
-        for (Worker worker: this.workers){
-            worker.acceptControlMessage(signal);
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
-        this.waitForAllWorkers(state);
     }
 
     public void printResults(int srcVertex){
@@ -90,7 +84,6 @@ public class Master{
                         + v.getId().getIntValue()
                         + " -> distance " + (v.getDistance()!=Integer.MAX_VALUE ? v.getDistance():"INFINITY")));
     }
-
 
 
     public void runBFS(int srcVertex){
