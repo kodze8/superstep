@@ -6,36 +6,29 @@ import graph.Vertex;
 import graph.VertexID;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
 
 public class Worker extends Thread implements MessageEmitter {
     private final int id;
-    private final HashMap<VertexID, Vertex> vertices;
-    private Queue<Message> currentQueue;
-    private volatile Queue<Message> nextQueue;
-    private  volatile Queue<ControlSignal> controlSignals;
-    private  volatile WorkerState stateSignal;
-    private volatile Queue<Message> msgForNeighbors;
-    private volatile Boolean running;
+    private volatile Boolean running = true;
+    private final HashMap<VertexID, Vertex> vertices = new HashMap<>();
+    private Queue<Message> currentQueue = new ConcurrentLinkedQueue<>();
+    private Queue<Message> nextQueue = new ConcurrentLinkedQueue<>();
+    public Queue<Message> msgForNeighbors = new ConcurrentLinkedQueue<>();
+    private Queue<ControlSignal> controlSignals;
+    private volatile WorkerState stateSignal;
     private CountDownLatch currentLatch;
 
-
-
-    public Worker(int temp){
-        this.running = true;
-        this.vertices = new HashMap<>();
+    public Worker(int id){
         this.controlSignals = new LinkedList<>();
-        this.currentQueue = new LinkedList<>();
-        this.nextQueue = new LinkedList<>();
-        this.msgForNeighbors = new LinkedList<>();
         this.stateSignal = WorkerState.READY;
-        this.id = temp;
+        this.id = id;
     }
 
     public void assignVertex(Vertex vertex){
         this.vertices.put(vertex.getId(), vertex);
-
     }
 
     public boolean containsVertex(VertexID id){
@@ -48,10 +41,6 @@ public class Worker extends Thread implements MessageEmitter {
 
     public void shutDown(){
         this.running = false;
-    }
-
-    public synchronized Queue<Message> getMessageForNeighbors(){
-        return this.msgForNeighbors;
     }
 
     /**Master Control Queue Functionalities*/
@@ -67,30 +56,27 @@ public class Worker extends Thread implements MessageEmitter {
     }
 
     /**Worker State*/
-    public synchronized WorkerState getWorkerState(){
-        return this.stateSignal;
-    }
     private synchronized void setWorkerState(WorkerState state){
         this.stateSignal = state;
         if (currentLatch != null) currentLatch.countDown();
     }
 
     /**Next & Current Queue Functionalities*/
-    public synchronized void addToNextQueue(Message message) {
+    public void addToNextQueue(Message message) {
         this.nextQueue.add(message);
     }
-    public synchronized void swapMessageQueues(){
-        this.currentQueue = new LinkedList<>(this.nextQueue);
-        this.nextQueue=  new LinkedList<>();
-        this.msgForNeighbors = new LinkedList<>();
+    public void swapMessageQueues(){
+        Queue<Message> temp = this.currentQueue;
+        this.currentQueue = this.nextQueue;
+        this.nextQueue = temp;
+        nextQueue.clear();
+        this.msgForNeighbors = new ConcurrentLinkedQueue<>();
     }
 
     public void processMsg(Message msg){
         VertexID address = msg.getAddress();
-        if (this.vertices.containsKey(address)){
-            Vertex vertex = vertices.get(address);
-            vertex.compute(msg.getDistance(), this);
-        }
+        Vertex vertex = vertices.get(address);
+        vertex.compute(msg.getDistance(), this);
     }
 
     @Override

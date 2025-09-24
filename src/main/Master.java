@@ -3,13 +3,11 @@ package main;
 import communication.Message;
 import graph.Graph;
 import graph.VertexID;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
 
 public class Master{
     static int numberOfWorkers = 5;
@@ -27,7 +25,7 @@ public class Master{
 
     public void createWorkers(){
         this.workers = new ArrayList<>();
-        for (int i=0; i<numberOfWorkers; i++){
+        for (int i = 0; i < numberOfWorkers; i++){
             Worker t = new Worker(i);
             this.workers.add(t);
             t.start();
@@ -35,17 +33,16 @@ public class Master{
     }
 
     public void partition(){
-        for (VertexID id: this.graph.getVertexIdSet()){
+        for (VertexID id : this.graph.getVertexIdSet()){
             int mod = id.getIntValue() % Master.numberOfWorkers;
             Worker currentWorker =  this.workers.get(mod);
             currentWorker.assignVertex(this.graph.getVertex(id));
         }
-
     }
 
     public void startBFS(int srcVertex){
         VertexID src = null;
-        for (VertexID id: this.graph.getVertexIdSet()){
+        for (VertexID id : this.graph.getVertexIdSet()){
             if (id.getIntValue() == srcVertex){
                 src = id;
                 break;
@@ -135,8 +132,7 @@ public class Master{
         edges.add(Arrays.asList(11, 12));
 
         Master master = new Master(15, edges);
-        master.runBFS(0);
+        master.runBFS(3);
 
     }
-
 }

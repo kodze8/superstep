@@ -15,7 +15,7 @@ public class Router {
         boolean deliveredAny = false;
 
         for (Worker from: this.workers){
-            for (Message msg: from.getMessageForNeighbors()){
+            for (Message msg: from.msgForNeighbors){
                 System.out.println("  Worker-" + from.getWorkerId() + " sends msg: " + msg);
 
                 for (Worker to: this.workers){
