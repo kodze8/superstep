@@ -1,10 +1,10 @@
-package algorithms;
+package runners;
 
 import graph.Graph;
-import main.Worker;
-import vertex_computation.BFSComputation;
-import vertex_computation.ComputationStrategy;
-import vertex_computation.PageRankComputation;
+import orchestration.Worker;
+import computations.BFSComputation;
+import computations.ComputationStrategy;
+import computations.PageRankComputation;
 
 import java.util.List;
 

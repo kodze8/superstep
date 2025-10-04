@@ -1,6 +1,6 @@
-package main;
+package orchestration;
 
-import communication.Message;
+import messaging.Message;
 
 import java.util.List;
 

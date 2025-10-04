@@ -1,6 +1,6 @@
-package main;
-import algorithms.AlgorithmType;
-import algorithms.AlgorithmsRunner;
+package orchestration;
+import runners.AlgorithmType;
+import runners.AlgorithmsRunner;
 import graph.Graph;
 import graph.VertexID;
 

@@ -1,6 +1,6 @@
-package vertex_computation;
+package computations;
 
-import communication.MessageEmitter;
+import messaging.MessageEmitter;
 import graph.Vertex;
 
 import java.util.List;

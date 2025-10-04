@@ -4,9 +4,9 @@ import java.util.*;
 
 public class Graph {
     private int n;
-    boolean directed;
     private final HashMap<VertexID, Vertex> vertexSet  = new HashMap<>();
     private final List<Edge> edgeSet  = new ArrayList<>();
+    boolean directed;
 
 
     public Graph(int n, List<List<Integer>> edges, boolean weighted, boolean directed){

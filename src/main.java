@@ -1,5 +1,5 @@
-package main;
-import algorithms.AlgorithmType;
+import orchestration.Master;
+import runners.AlgorithmType;
 import graph.Graph;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +7,8 @@ import java.util.List;
 
 public class main {
     public static void main(String[] args) {
+
+        // Test Graph
         List<List<Integer>> edges = new ArrayList<>();
         edges.add(Arrays.asList(0, 1));
         edges.add(Arrays.asList(0, 2));
@@ -25,6 +27,8 @@ public class main {
         edges.add(Arrays.asList(10, 14));
         edges.add(Arrays.asList(11, 12));
 
+
+        // run
         AlgorithmType algo =  AlgorithmType.BFS;
 
         Graph graph =  new Graph(15, edges, false, true);

@@ -1,4 +1,4 @@
-package communication;
+package messaging;
 import graph.VertexID;
 
 public class Message{

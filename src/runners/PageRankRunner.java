@@ -1,10 +1,10 @@
-package algorithms;
+package runners;
 
-import communication.Message;
+import messaging.Message;
 import graph.Graph;
 import graph.Vertex;
 import graph.VertexID;
-import main.Worker;
+import orchestration.Worker;
 
 import java.util.Comparator;
 import java.util.List;
@@ -20,12 +20,12 @@ public class PageRankRunner implements AlgorithmsRunner{
     public void start() {
         int n  = this.graph.getN();
         for (Vertex vertex: this.graph.getVertexValueSet()){
-            vertex.setDistance(1.0/n);
+            vertex.setValue(1.0/n);
 
             int outgoing = vertex.getOutgoiongEdges();
 
             for (VertexID neighbor: vertex.getNeighbors()){
-                double share = vertex.getDistance()/outgoing;
+                double share = vertex.getValue()/outgoing;
                 for (Worker worker: this.workers){
                     if (worker.containsVertex(neighbor)) {
                         worker.addToNextQueue(new Message(neighbor, share));
@@ -40,10 +40,10 @@ public class PageRankRunner implements AlgorithmsRunner{
     public void print() {
         System.out.println("\nFinal ranks from each Vertex :");
         this.graph.getVertexValueSet().stream()
-                .sorted(Comparator.comparingDouble(v ->  v.getDistance()))
+                .sorted(Comparator.comparingDouble(v ->  v.getValue()))
                 .forEach(v -> System.out.println("Vertex "
                         + v.getId().getIntValue()
-                        + " -> rank " + (v.getDistance()!=Integer.MAX_VALUE ? v.getDistance():"INFINITY")));
+                        + " -> rank " + (v.getValue()!=Integer.MAX_VALUE ? v.getValue():"INFINITY")));
 
 
     }

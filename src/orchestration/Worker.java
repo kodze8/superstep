@@ -1,10 +1,10 @@
-package main;
+package orchestration;
 
-import communication.Message;
-import communication.MessageEmitter;
+import messaging.Message;
+import messaging.MessageEmitter;
 import graph.Vertex;
 import graph.VertexID;
-import vertex_computation.ComputationStrategy;
+import computations.ComputationStrategy;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -90,8 +90,6 @@ public class Worker extends Thread implements MessageEmitter {
                     .add(msg.getValue());
         }
         for (Map.Entry<Vertex, List<Double>> entry: msgs.entrySet()){
-//            System.out.println("vertex "+entry.getKey().getId().getIntValue()+"has "+entry.getValue());
-//            entry.getKey().computeBFS(entry.getValue(), this);
             computationStrategy.compute(entry.getKey(), entry.getValue(), this, n);
         }
     }

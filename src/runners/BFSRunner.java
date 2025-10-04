@@ -1,9 +1,9 @@
-package algorithms;
+package runners;
 
-import communication.Message;
+import messaging.Message;
 import graph.Graph;
 import graph.VertexID;
-import main.Worker;
+import orchestration.Worker;
 
 import java.util.Comparator;
 import java.util.List;
@@ -47,7 +47,7 @@ public class BFSRunner implements AlgorithmsRunner {
                 .sorted(Comparator.comparingInt(v -> v.getId().getIntValue()))
                 .forEach(v -> System.out.println("Vertex "
                         + v.getId().getIntValue()
-                        + " -> distance " + (v.getDistance()!=Integer.MAX_VALUE ? v.getDistance():"INFINITY")));
+                        + " -> distance " + (v.getValue()!=Integer.MAX_VALUE ? v.getValue():"INFINITY")));
 
     }
 }

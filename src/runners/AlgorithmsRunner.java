@@ -1,4 +1,4 @@
-package algorithms;
+package runners;
 
 public interface AlgorithmsRunner {
     public abstract void start();

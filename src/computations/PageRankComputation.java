@@ -1,7 +1,7 @@
-package vertex_computation;
+package computations;
 
-import communication.Message;
-import communication.MessageEmitter;
+import messaging.Message;
+import messaging.MessageEmitter;
 import graph.Edge;
 import graph.Vertex;
 
@@ -14,13 +14,13 @@ public class PageRankComputation implements ComputationStrategy{
     public void compute(Vertex vertex, List<Double> data, MessageEmitter emitter, int n) {
         double sum = data.stream().mapToDouble(Double::doubleValue).sum();
         double newRank = (1 - DAMPING) / n + DAMPING * sum;
-        if (Math.abs(newRank-vertex.getDistance()) > EPSILON){
+        if (Math.abs(newRank-vertex.getValue()) > EPSILON){
             for (Edge e : vertex.edges) {
                 double rankElement = newRank / vertex.getOutgoiongEdges();
                 emitter.emit(new Message(e.getDst(), rankElement));
             }
         }
-        vertex.setDistance(newRank);
+        vertex.setValue(newRank);
     }
 
 }
