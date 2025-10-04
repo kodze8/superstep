@@ -1,11 +1,10 @@
 package main;
-
-import communication.Message;
+import algorithms.AlgorithmType;
+import algorithms.AlgorithmsRunner;
 import graph.Graph;
 import graph.VertexID;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -15,24 +14,27 @@ public class Master{
     List<Worker> workers;
     boolean isHalted = false;
 
+    AlgorithmType algorithmType;
+    private AlgorithmsRunner runner;
 
-    public Master(int n, List<List<Integer>> edgeList){
-        // edgeList: [src, dst, weight]
-        this.graph = new Graph(n, edgeList, false);
+
+    public Master(Graph graph, AlgorithmType algorithmType){
+        this.graph = graph;
+        this.algorithmType = algorithmType;
         this.createWorkers();
         this.partition();
     }
 
-    public void createWorkers(){
+    private void createWorkers(){
         this.workers = new ArrayList<>();
         for (int i = 0; i < numberOfWorkers; i++){
-            Worker t = new Worker(i);
+            Worker t = new Worker(i, this.graph.getN(), this.algorithmType.getComputationStrategy());
             this.workers.add(t);
-            t.start();
+            t.start(); 
         }
     }
 
-    public void partition(){
+    private void partition(){
         for (VertexID id : this.graph.getVertexIdSet()){
             int mod = id.getIntValue() % Master.numberOfWorkers;
             Worker currentWorker =  this.workers.get(mod);
@@ -40,28 +42,7 @@ public class Master{
         }
     }
 
-    public void startBFS(int srcVertex){
-        VertexID src = null;
-        for (VertexID id : this.graph.getVertexIdSet()){
-            if (id.getIntValue() == srcVertex){
-                src = id;
-                break;
-            }
-        }
-        if (src ==null){
-            System.out.println("Source vertex is not part of the Graph.");
-            return;
-        }
-
-        for (Worker worker: this.workers){
-            if (worker.containsVertex(src)) {
-                worker.addToNextQueue(new Message(src, 0));
-                break;
-            }
-        }
-    }
-
-    public void setState(ControlSignal signal, WorkerState state) {
+    private void setState(ControlSignal signal, WorkerState state) {
         CountDownLatch latch = new CountDownLatch(workers.size());
         for (Worker worker : workers) {
             worker.acceptControlMessage(signal, latch);
@@ -73,18 +54,17 @@ public class Master{
         }
     }
 
-    public void printResults(int srcVertex){
-        System.out.println("\nFinal distances from source " + srcVertex + ":");
-        this.graph.getVertexValueSet().stream()
-                .sorted(Comparator.comparingInt(v -> v.getId().getIntValue()))
-                .forEach(v -> System.out.println("Vertex "
-                        + v.getId().getIntValue()
-                        + " -> distance " + (v.getDistance()!=Integer.MAX_VALUE ? v.getDistance():"INFINITY")));
+    public void start(){
+        switch (this.algorithmType) {
+            case PAGERANK ->
+                    this.runner = this.algorithmType.createAlgorithmsRunner(this.graph, this.workers, -1);
+            case BFS ->
+                    this.runner = this.algorithmType.createAlgorithmsRunner(this.graph, this.workers, 0);
+        }
+        this.runner.start();
     }
 
-
-    public void runBFS(int srcVertex){
-        this.startBFS(srcVertex);
+    public void run(){
         int superStep = 1;
         Router router = new Router(this.workers);
 
@@ -107,32 +87,11 @@ public class Master{
 
             superStep++;
         }
-        this.printResults(srcVertex);
         this.setState(ControlSignal.SHUTDOWN, WorkerState.SHUTDOWN);
     }
 
-
-    public static void main(String[] args) {
-        // TEST
-        List<List<Integer>> edges = new ArrayList<>();
-        edges.add(Arrays.asList(0, 1));
-        edges.add(Arrays.asList(0, 2));
-        edges.add(Arrays.asList(1, 3));
-        edges.add(Arrays.asList(1, 4));
-        edges.add(Arrays.asList(2, 5));
-        edges.add(Arrays.asList(2, 6));
-        edges.add(Arrays.asList(3, 7));
-        edges.add(Arrays.asList(4, 8));
-        edges.add(Arrays.asList(5, 9));
-        edges.add(Arrays.asList(6, 10));
-        edges.add(Arrays.asList(7, 11));
-        edges.add(Arrays.asList(8, 12));
-        edges.add(Arrays.asList(9, 13));
-        edges.add(Arrays.asList(10, 14));
-        edges.add(Arrays.asList(11, 12));
-
-        Master master = new Master(15, edges);
-        master.runBFS(3);
-
+    public void printResults(){
+        this.runner.print();
     }
+
 }

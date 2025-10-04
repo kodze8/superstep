@@ -3,15 +3,15 @@ package graph;
 import java.util.*;
 
 public class Graph {
-    int n;
-    private final HashMap<VertexID, Vertex> vertexSet;
-    private final List<Edge> edgeSet;
+    private int n;
+    boolean directed;
+    private final HashMap<VertexID, Vertex> vertexSet  = new HashMap<>();
+    private final List<Edge> edgeSet  = new ArrayList<>();
 
-    public Graph(int n, List<List<Integer>> edges, boolean weighted){
+
+    public Graph(int n, List<List<Integer>> edges, boolean weighted, boolean directed){
+        // edgeList: [src, dst, weight]
         this.n = n;
-        this.vertexSet = new HashMap<>();
-        this.edgeSet = new ArrayList<>();
-
 
         for (int i=0; i<n; i++){
             Vertex v = new Vertex(i);
@@ -19,20 +19,23 @@ public class Graph {
         }
 
         for (List<Integer> e : edges) {
-            Edge edge;
+
             VertexID node1ID = new VertexID(e.get(0));
             VertexID node2ID = new VertexID(e.get(1));
-            if (weighted) {
-                edge = new Edge(node1ID, node2ID, e.get(2));
-                vertexSet.get(node1ID).setEdge(node2ID, e.get(2));
-                vertexSet.get(node2ID).setEdge(node1ID, e.get(2));
-            }else {
-                edge = new Edge(node1ID, node2ID);
-                vertexSet.get(node1ID).setEdge(node2ID);
-                vertexSet.get(node2ID).setEdge(node1ID);
+            int weight = (weighted ? e.get(2) : 1);
 
+            vertexSet.get(node1ID).addOutgoingEdge();
+            vertexSet.get(node2ID).addIncomingEdge();
+
+            Edge edge1 = new Edge(node1ID, node2ID, weight);
+            vertexSet.get(node1ID).setEdge(edge1);
+            edgeSet.add(edge1);
+
+            if (!directed) {
+                Edge edge2 = new Edge(node2ID, node1ID, weight);
+                vertexSet.get(node2ID).setEdge(edge2);
+                edgeSet.add(edge2);
             }
-            this.edgeSet.add(edge);
         }
     }
 
@@ -45,4 +48,6 @@ public class Graph {
     public Set<Vertex> getVertexValueSet() {
         return new HashSet<>(this.vertexSet.values());
     }
+
+    public int getN(){return this.n;}
 }

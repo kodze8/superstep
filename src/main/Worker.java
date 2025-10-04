@@ -4,6 +4,7 @@ import communication.Message;
 import communication.MessageEmitter;
 import graph.Vertex;
 import graph.VertexID;
+import vertex_computation.ComputationStrategy;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -12,6 +13,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class Worker extends Thread implements MessageEmitter {
     private final int id;
+    private final int n;
     private volatile Boolean running = true;
     private final HashMap<VertexID, Vertex> vertices = new HashMap<>();
     private Queue<Message> currentQueue = new ConcurrentLinkedQueue<>();
@@ -21,10 +23,14 @@ public class Worker extends Thread implements MessageEmitter {
     private volatile WorkerState stateSignal;
     private CountDownLatch currentLatch;
 
-    public Worker(int id){
+    private ComputationStrategy computationStrategy;
+
+    public Worker(int id, int n, ComputationStrategy computationStrategy){
         this.controlSignals = new LinkedList<>();
         this.stateSignal = WorkerState.READY;
         this.id = id;
+        this.n = n;
+        this.computationStrategy = computationStrategy;
     }
 
     public void assignVertex(Vertex vertex){
@@ -73,10 +79,21 @@ public class Worker extends Thread implements MessageEmitter {
         this.msgForNeighbors = new ConcurrentLinkedQueue<>();
     }
 
-    public void processMsg(Message msg){
-        VertexID address = msg.getAddress();
-        Vertex vertex = vertices.get(address);
-        vertex.compute(msg.getDistance(), this);
+    public void processMsg(){
+        HashMap<Vertex, List<Double>> msgs = new HashMap<>();
+        while (!this.currentQueue.isEmpty()) {
+            Message msg = this.currentQueue.poll();
+            // System.out.println("  Worker-" + this.id + " processes msg: " + msg);
+            VertexID address = msg.getAddress();
+            Vertex vertex = vertices.get(address);
+            msgs.computeIfAbsent(vertex, k -> new ArrayList<>())
+                    .add(msg.getValue());
+        }
+        for (Map.Entry<Vertex, List<Double>> entry: msgs.entrySet()){
+//            System.out.println("vertex "+entry.getKey().getId().getIntValue()+"has "+entry.getValue());
+//            entry.getKey().computeBFS(entry.getValue(), this);
+            computationStrategy.compute(entry.getKey(), entry.getValue(), this, n);
+        }
     }
 
     @Override
@@ -87,11 +104,7 @@ public class Worker extends Thread implements MessageEmitter {
                 switch (signal) {
                     case START_STEP -> this.setWorkerState(WorkerState.READY);
                     case PROCESS_MESSAGES -> {
-                        while (!this.currentQueue.isEmpty()) {
-                            Message msg = this.currentQueue.poll();
-                            System.out.println("  Worker-" + this.id + " processes msg: " + msg);
-                            this.processMsg(msg);
-                        }
+                        this.processMsg();
                         this.setWorkerState(WorkerState.FINISHED);
                     }
                     case SHUTDOWN -> {

@@ -1,25 +1,25 @@
 package communication;
 import graph.VertexID;
 
-public class Message {
+public class Message{
     VertexID address;
-    int distance;
+    double value;
     String Message;
-    public Message(VertexID from,int distance){
+    public Message(VertexID from, double value){
         this.address = from;
-        this.distance = distance;
+        this.value = value;
     }
 
     public VertexID getAddress(){
         return this.address;
     }
 
-    public int getDistance(){
-        return this.distance;
+    public double getValue(){
+        return this.value;
     }
 
     @Override
     public String toString() {
-        return "Vertex-"+this.address.getIntValue() + " has distance " + this.distance;
+        return "Vertex-"+this.address.getIntValue() + " has distance " + this.value;
     }
 }
