@@ -12,6 +12,7 @@ public class Graph {
     public Graph(int n, List<List<Integer>> edges, boolean weighted, boolean directed){
         // edgeList: [src, dst, weight]
         this.n = n;
+        this.directed = directed;
 
         for (int i=0; i<n; i++){
             Vertex v = new Vertex(i);
@@ -31,7 +32,7 @@ public class Graph {
             vertexSet.get(node1ID).setEdge(edge1);
             edgeSet.add(edge1);
 
-            if (!directed) {
+            if (!this.directed) {
                 Edge edge2 = new Edge(node2ID, node1ID, weight);
                 vertexSet.get(node2ID).setEdge(edge2);
                 edgeSet.add(edge2);

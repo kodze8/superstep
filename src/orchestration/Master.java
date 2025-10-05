@@ -16,6 +16,7 @@ public class Master{
 
     AlgorithmType algorithmType;
     private AlgorithmsRunner runner;
+    private int srcVertex = -1;
 
 
     public Master(Graph graph, AlgorithmType algorithmType){
@@ -23,6 +24,10 @@ public class Master{
         this.algorithmType = algorithmType;
         this.createWorkers();
         this.partition();
+    }
+    public Master(Graph graph, AlgorithmType algorithmType, int srcVertex){
+        this(graph, algorithmType);
+        this.srcVertex = srcVertex;
     }
 
     private void createWorkers(){
@@ -42,7 +47,7 @@ public class Master{
         }
     }
 
-    private void setState(ControlSignal signal, WorkerState state) {
+    private void setControlSignal(ControlSignal signal) {
         CountDownLatch latch = new CountDownLatch(workers.size());
         for (Worker worker : workers) {
             worker.acceptControlMessage(signal, latch);
@@ -55,12 +60,13 @@ public class Master{
     }
 
     public void start(){
-        switch (this.algorithmType) {
-            case PAGERANK ->
-                    this.runner = this.algorithmType.createAlgorithmsRunner(this.graph, this.workers, -1);
-            case BFS ->
-                    this.runner = this.algorithmType.createAlgorithmsRunner(this.graph, this.workers, 0);
-        }
+        this.runner = this.algorithmType.createAlgorithmsRunner(this.graph, this.workers, this.srcVertex);
+//        switch (this.algorithmType) {
+//            case PAGERANK ->
+//                    this.runner = this.algorithmType.createAlgorithmsRunner(this.graph, this.workers, this.srcVertex);
+//            case BFS ->
+//                    this.runner = this.algorithmType.createAlgorithmsRunner(this.graph, this.workers, this.srcVertex);
+//        }
         this.runner.start();
     }
 
@@ -75,10 +81,10 @@ public class Master{
                 worker.swapMessageQueues();
             }
 
-            this.setState(ControlSignal.START_STEP, WorkerState.READY);
+            this.setControlSignal(ControlSignal.START_STEP);
             System.out.println("-> All workers STARTED");
 
-            this.setState(ControlSignal.PROCESS_MESSAGES, WorkerState.FINISHED);
+            this.setControlSignal(ControlSignal.PROCESS_MESSAGES);
             System.out.println("-> All workers FINISHED");
 
 
@@ -87,7 +93,7 @@ public class Master{
 
             superStep++;
         }
-        this.setState(ControlSignal.SHUTDOWN, WorkerState.SHUTDOWN);
+        this.setControlSignal(ControlSignal.SHUTDOWN);
     }
 
     public void printResults(){

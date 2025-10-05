@@ -1,5 +1,6 @@
 package computations;
 
+import graph.VertexID;
 import messaging.Message;
 import messaging.MessageEmitter;
 import graph.Edge;

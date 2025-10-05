@@ -83,7 +83,6 @@ public class Worker extends Thread implements MessageEmitter {
         HashMap<Vertex, List<Double>> msgs = new HashMap<>();
         while (!this.currentQueue.isEmpty()) {
             Message msg = this.currentQueue.poll();
-            // System.out.println("  Worker-" + this.id + " processes msg: " + msg);
             VertexID address = msg.getAddress();
             Vertex vertex = vertices.get(address);
             msgs.computeIfAbsent(vertex, k -> new ArrayList<>())

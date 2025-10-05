@@ -1,43 +1,45 @@
 import orchestration.Master;
 import runners.AlgorithmType;
 import graph.Graph;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import tests.BFSTest;
+import tests.PageRankTest;
+
 
 public class main {
-    public static void main(String[] args) {
+    private static void runComparison(String label, Graph graph,  AlgorithmType algo) {
+        System.out.println("===== " + label + " Graph =====");
 
-        // Test Graph
-        List<List<Integer>> edges = new ArrayList<>();
-        edges.add(Arrays.asList(0, 1));
-        edges.add(Arrays.asList(0, 2));
-        edges.add(Arrays.asList(1, 2));
-        edges.add(Arrays.asList(1, 3));
-        edges.add(Arrays.asList(1, 4));
-        edges.add(Arrays.asList(2, 5));
-        edges.add(Arrays.asList(2, 6));
-        edges.add(Arrays.asList(3, 7));
-        edges.add(Arrays.asList(4, 8));
-        edges.add(Arrays.asList(5, 9));
-        edges.add(Arrays.asList(6, 10));
-        edges.add(Arrays.asList(7, 11));
-        edges.add(Arrays.asList(8, 12));
-        edges.add(Arrays.asList(9, 13));
-        edges.add(Arrays.asList(10, 14));
-        edges.add(Arrays.asList(11, 12));
+        long start = System.nanoTime();
+        BFSTest.runSimpleBfs(graph, 0);
+        long end = System.nanoTime();
+        System.out.printf("Simple BFS: %.3f ms%n", (end - start) / 1e6);
 
-
-        // run
-        AlgorithmType algo =  AlgorithmType.BFS;
-
-        Graph graph =  new Graph(15, edges, false, true);
-        Master master = new Master(graph, algo);
-
+        start = System.nanoTime();
+        Master master = new Master(graph, algo, 0);
         master.start();
         master.run();
-        master.printResults();
+        end = System.nanoTime();
+        System.out.printf("Pregel BFS: %.3f ms%n%n", (end - start) / 1e6);
+    }
 
+    private static void runComparisonPageRank(Graph graph,  AlgorithmType algo) {
+        System.out.println("===== Test on PageRank  =====");
+
+        double start = System.nanoTime();
+        Master master = new Master(graph, algo);
+        master.start();
+        master.run();
+        double end = System.nanoTime();
+        master.printResults();
+        System.out.printf("Pregel PageRank: %.3f ms%n%n", (end - start) / 1e6);
+    }
+
+    public static void main(String[] args) {
+        runComparison("Small", BFSTest.getSmallGraph(), AlgorithmType.BFS);
+        runComparison("Medium", BFSTest.getMediumGraph(), AlgorithmType.BFS);
+        runComparison("Large", BFSTest.getLargeGraph(), AlgorithmType.BFS);
+
+        runComparisonPageRank(PageRankTest.getPageRankGraph(), AlgorithmType.PAGERANK);
 
     }
 }

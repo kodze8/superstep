@@ -16,7 +16,7 @@ public class Router {
 
         for (Worker from: this.workers){
             for (Message msg: from.msgForNeighbors){
-                System.out.println("  Worker-" + from.getWorkerId() + " sends msg: " + msg);
+//                System.out.println("  Worker-" + from.getWorkerId() + " sends msg: " + msg);
 
                 for (Worker to: this.workers){
                     if (to.containsVertex(msg.getAddress())) {
