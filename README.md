@@ -5,7 +5,6 @@
 
 This project implements a Pregel-style distributed graph processing framework using multi-threaded simulation. It serves as a foundational step toward building a fully distributed, multi-server implementation while providing a complete vertex-centric computing environment for educational purposes.
 
----
 
 ### Project Vision 
 
@@ -72,24 +71,15 @@ Core Components Deep Dive
 **2. Graph Data Model** (``graph/``)
 
 ```java
-
 // Graph Construction Example
-
 List<List<Integer>> edges = Arrays.asList(
-
     Arrays.asList(0, 1),        // Edge from vertex 0 to 1
-
-    Arrays.asList(1, 2),        // Edge from vertex 1 to 2  
-
+    Arrays.asList(1, 2),        // Edge from vertex 1 to 2
     Arrays.asList(2, 0)         // Edge from vertex 2 to 0
-
 );
 
-
 // Parameters: numVertices, edges, isWeighted, isDirected
-
 Graph graph = new Graph(3, edges, false, true);
-
 ```
 
 **Graph Model Features:**
@@ -120,112 +110,68 @@ Graph graph = new Graph(3, edges, false, true);
  **Step 1:** Define Vertex Computation Logic
 
 ```java
-
-public class YourAlgorithmComputation implements ComputationStrategy {
-
+public class NewAlgorithmComputation implements ComputationStrategy {
     
     @Override
-
-    public void compute(Vertex vertex, List<Double> incomingMessages, 
-
+    public void compute(Vertex vertex, List<Double> incomingMessages,
                        MessageEmitter emitter, int totalVertices) {
-
         // TODO
-
     }
-
 }
-
 ```
 
 **Step 2:** Create Algorithm Runner for Initialization
 
 ```java
-
-public class YourAlgorithmRunner implements AlgorithmsRunner {
-
+public class NewAlgorithmRunner implements AlgorithmsRunner {
     private Graph graph;
-
     private List<Worker> workers;
-
     private int sourceVertex;
-
     
-    public YourAlgorithmRunner(Graph graph, List<Worker> workers, int source) {
-
+    public NewAlgorithmRunner(Graph graph, List<Worker> workers, int source) {
         this.graph = graph;
-
         this.workers = workers;
-
         this.sourceVertex = source;
-
     }
-
     
     @Override
-
     public void start() {
-
         // Initialize vertex states
-
         // TODO
-
         
         // Activate source vertex for first superstep
-
         // TODO
-
     }
-
     
     @Override
-
     public void print() {
-
         // Output algorithm results
-
         // TODO
-
     }
-
 }
-
 ```
 
 **Step 3:** Register Algorithm in Framework
 
 ```java
-
 // In AlgorithmType.java
-
 public enum AlgorithmType {
-
-    YOUR_ALGORITHM {
-
+    
+    NEW_ALGORITHM {
         @Override
-
         public ComputationStrategy getComputationStrategy() {
-
-            return new YourAlgorithmComputation();
-
+            return new NewAlgorithmComputation();
         }
-
         
         @Override
-
-        public AlgorithmsRunner createAlgorithmsRunner(Graph graph, 
-
+        public AlgorithmsRunner createAlgorithmsRunner(Graph graph,
                 List<Worker> workers, int sourceVertex) {
-
-            return new YourAlgorithmRunner(graph, workers, sourceVertex);
-
+            return new NEWAlgorithmRunner(graph, workers, sourceVertex);
         }
-
     },
-
+    
     // ... existing algorithms
 }
-
 ```
 
 ---
@@ -322,7 +268,7 @@ static int numberOfWorkers = 5;  // Optimal: Number of CPU cores
 
 ```java
 // 1. Create graph
-List<List<Integer>> edges = // your edge list
+List<List<Integer>> edges = // edge list
 Graph graph = new Graph(numVertices, edges, isWeighted, isDirected);
 
 // 2. Choose algorithm
